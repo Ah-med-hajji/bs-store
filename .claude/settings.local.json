@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(npx vercel:*)",
+      "Bash(npm list:*)",
+      "Bash(mkdir -p /home/dell/.npm-global/lib)",
+      "Bash(npm install:*)",
+      "Bash(vercel --version)"
     ]
   }
 }
