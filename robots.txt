@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bsstore.tn/sitemap.xml
+Sitemap: https://bs-store.tn/sitemap.xml
