@@ -1,7 +1,7 @@
 # BS Store — Landing Page & Category Catalog
 
 ## Project Overview
-BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page static site with category browsing, shopping cart, WhatsApp ordering, and French/English translation. The site is built to premium/agency quality with advanced animations and interactions.
+BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page static site with category browsing, shopping cart, WhatsApp ordering, and French/English translation. French is the default language. The site is built to premium/agency quality with advanced animations and interactions.
 
 ## Tech Stack
 - Static HTML/CSS/JS (no framework)
@@ -33,16 +33,23 @@ BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page stat
 ## Architecture
 
 ### Component Injection
-Shared UI components (navbar, footer, cart sidebar, order form) are injected by `js/components.js` into placeholder `<div>` elements on every page. This avoids duplicating HTML across 7 pages.
+Shared UI components (navbar, footer, cart sidebar, order form) are injected by `js/components.js` into placeholder `<div>` elements on every page. Uses string concatenation (not template literals) for reliable HTML generation. Runs immediately as an IIFE, before DOMContentLoaded.
+
+### Navbar Layout
+HTML order in nav-container: `logo → nav-links → nav-actions → hamburger`
+- Desktop: nav-links uses `margin-left: auto` to center; nav-actions sits right
+- Mobile: nav-links hidden (overlay); nav-actions uses `margin-left: auto` for right-corner placement; hamburger visible
+- Shop dropdown always expanded as flat list in mobile menu (no hover dependency)
+- Cart icon and language toggle always visible on all screen sizes
 
 ### i18n System
-Translation uses `data-i18n="key"` attributes. The `js/i18n.js` file contains a `translations` object with `fr` (default) and `en` keys. `applyLanguage()` swaps all text on load. Language preference saved to localStorage.
+Translation uses `data-i18n="key"` attributes. The `js/i18n.js` file contains a `translations` object with `fr` (default) and `en` keys. All French text uses proper Unicode accents (`\u00e9` for é, etc.). `applyLanguage()` swaps all text on load. Language preference saved to localStorage. When toggled, dynamic content (product grid, cart sidebar) is re-rendered with `renderProductGrid()` and `Cart.renderSidebar()`.
 
 ### Cart System
-Cart uses localStorage (key: `bs-store-cart`). Products are added from category pages, managed in a slide-in sidebar, and orders are confirmed via WhatsApp message to +21658113142.
+Cart uses localStorage (key: `bs-store-cart`). Products are added from category pages, managed in a slide-in sidebar (full-screen on mobile), and orders are confirmed via WhatsApp message to +21658113142. Order form includes 24 Tunisian governorates dropdown.
 
 ### Product Data
-Centralized in `js/products.js` as the single source of truth. Category pages read `data-category` from `<body>` and render dynamically.
+Centralized in `js/products.js` as the single source of truth. All 29 products across 6 categories have unique Unsplash image URLs. Category pages read `data-category` from `<body>` and render dynamically via `js/category.js`.
 
 ## File Structure
 ```
@@ -56,17 +63,17 @@ bs-store/
 │   ├── shirts.html               # Shirts (5 products)
 │   └── accessories.html          # Accessories (6 products)
 ├── css/
-│   ├── style.css                 # Main styles + category grid + nav actions
-│   └── categories.css            # Category pages, cart sidebar, order form
+│   ├── style.css                 # Main styles + category grid + nav actions + mobile fixes
+│   └── categories.css            # Category pages, cart sidebar, order form, size selectors
 ├── js/
-│   ├── products.js               # Centralized product data (Unsplash images)
-│   ├── i18n.js                   # FR/EN translation system
-│   ├── components.js             # Shared navbar/footer/cart/form injection
+│   ├── products.js               # Centralized product data + CATEGORIES_META (Unsplash images)
+│   ├── i18n.js                   # FR/EN translation system with proper Unicode accents
+│   ├── components.js             # Shared navbar/footer/cart/form injection (IIFE, runs immediately)
 │   ├── cart.js                   # Cart logic, order form, WhatsApp integration
-│   ├── category.js               # Category page rendering + animations
-│   └── main.js                   # Homepage animations (GSAP, Lenis, cursor, etc.)
+│   ├── category.js               # Category page rendering, scroll progress, GSAP animations
+│   └── main.js                   # Homepage animations (GSAP, Lenis, cursor, testimonials, etc.)
 ├── favicon.svg                   # SVG favicon with "BS" initials
-├── sitemap.xml                   # SEO sitemap (bs-store.tn)
+├── sitemap.xml                   # SEO sitemap (bs-store.tn, 7 URLs)
 ├── robots.txt                    # Allows all crawlers (bs-store.tn)
 └── CLAUDE.md                     # This file
 ```
@@ -88,11 +95,11 @@ bs-store/
 <script src="gsap.min.js"></script>
 <script src="ScrollTrigger.min.js"></script>
 <script src="lenis.min.js"></script>
-<script src="js/products.js"></script>      <!-- Product data -->
-<script src="js/i18n.js"></script>           <!-- Translation system -->
-<script src="js/components.js"></script>     <!-- Injects navbar/footer/cart -->
-<script src="js/cart.js"></script>           <!-- Cart logic -->
-<!-- Page-specific: -->
+<script src="js/products.js"></script>      <!-- Product data + CATEGORIES_META -->
+<script src="js/i18n.js"></script>           <!-- Translation system (defines getCurrentLang, t, applyLanguage, toggleLanguage) -->
+<script src="js/components.js"></script>     <!-- Injects navbar/footer/cart/form (IIFE, uses getCurrentLang from i18n.js) -->
+<script src="js/cart.js"></script>           <!-- Cart logic, exposes global Cart object -->
+<!-- Page-specific (one or the other): -->
 <script src="js/main.js"></script>           <!-- Homepage only -->
 <script src="js/category.js"></script>       <!-- Category pages only -->
 ```
@@ -100,34 +107,36 @@ bs-store/
 ## Key Code Patterns
 
 ### Adding a new product
-1. Add entry to `PRODUCTS` object in `js/products.js`
+1. Add entry to `PRODUCTS` object in `js/products.js` with unique Unsplash image URL
 2. Add name translations to `translations` object in `js/i18n.js` (both `fr` and `en`)
 3. Product renders automatically on its category page
 
 ### Adding a new category
 1. Add category key to `PRODUCTS` in `js/products.js`
 2. Add category metadata to `CATEGORIES_META`
-3. Add translations to `js/i18n.js`
+3. Add translations to `js/i18n.js` (name, subtitle, desc, card_desc)
 4. Create new HTML file in `categories/` following existing pattern
-5. Add link in `components.js` navbar and footer
+5. Add link in `components.js` navbar dropdown and footer
 6. Add category card in `index.html`
 
 ### i18n
 - Add `data-i18n="key"` attribute to any text element
 - Add translations for both `fr` and `en` keys in `js/i18n.js`
 - For attributes (placeholder), use `data-i18n-attr="placeholder:key"`
+- French text must use Unicode escapes for accents (`\u00e9` = é) in JS strings
 
 ### Cart
-- Add `data-product-id`, image, nameKey, price to any product card
-- Cart.addItem() handles the rest
-- Order form validates and sends WhatsApp message
+- Products use `nameKey` (i18n key) so names translate when language changes
+- `Cart.addItem()` checks for existing id+size combo and increments quantity
+- Order form validates phone as 8 digits, sends via `wa.me/21658113142`
+- Cart sidebar is full-screen on mobile (<640px)
 
 ## WhatsApp Message Format
 ```
 *Nouvelle Commande - BS Store*
 
 *Client:* [name]
-*Telephone:* [phone]
+*Téléphone:* [phone]
 *Adresse:* [address]
 *Gouvernorat:* [governorate]
 
@@ -138,6 +147,16 @@ bs-store/
 *Livraison:* 8 TND
 *Total:* XX TND
 ```
+
+## SEO
+- Structured data (JSON-LD): ClothingStore + LocalBusiness with absolute logo URL
+- Open Graph + Twitter Card meta tags on all pages
+- Canonical URLs pointing to `bs-store.tn`
+- `sitemap.xml` with all 7 pages (homepage + 6 categories)
+- `robots.txt` allowing all crawlers
+- Semantic HTML with proper heading hierarchy (h1 per page, h2 for sections)
+- Alt text on all product images
+- Mobile-friendly (responsive, 44px touch targets)
 
 ## Deployment
 ```bash

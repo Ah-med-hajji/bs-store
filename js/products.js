@@ -26,7 +26,7 @@ const PRODUCTS = {
       nameKey: 'prod.striped_polo',
       price: 55,
       badge: null,
-      image: 'https://images.unsplash.com/photo-1625910513413-5fc46c5dddd4?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&h=750&fit=crop&q=80',
       sizes: ['S', 'M', 'L', 'XL']
     },
     {
