@@ -235,7 +235,6 @@ a {
   padding: 0 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 80px;
   gap: 16px;
 }
@@ -340,6 +339,7 @@ a {
   list-style: none;
   gap: 32px;
   align-items: center;
+  margin-left: auto;
 }
 
 .nav-links > li > a {
@@ -1245,16 +1245,10 @@ a {
 @media (max-width: 640px) {
   .hamburger {
     display: flex;
-    order: 3;
   }
 
   .nav-actions {
-    order: 2;
     margin-left: auto;
-  }
-
-  .nav-logo {
-    order: 1;
   }
 
   .nav-links {
@@ -1268,19 +1262,18 @@ a {
     -webkit-backdrop-filter: blur(20px);
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0;
     padding: 100px 24px 40px;
-    max-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    margin-left: 0;
     opacity: 0;
     visibility: hidden;
-    transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s, visibility 0.4s;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
     z-index: 999;
   }
 
   .nav-links.active {
-    max-height: 100vh;
     opacity: 1;
     visibility: visible;
   }
@@ -1292,8 +1285,8 @@ a {
 
   .nav-links > li > a {
     display: block;
-    padding: 20px 24px;
-    font-size: 1.2rem;
+    padding: 18px 24px;
+    font-size: 1.1rem;
     color: rgba(245, 240, 232, 0.7);
   }
 
@@ -1301,7 +1294,7 @@ a {
     display: none;
   }
 
-  /* Mobile: shop dropdown becomes flat sub-items */
+  /* Mobile: shop dropdown always expanded */
   .nav-dropdown-menu {
     position: static;
     transform: none;
@@ -1312,16 +1305,15 @@ a {
     opacity: 1;
     visibility: visible;
     min-width: auto;
-    display: none;
   }
 
-  .nav-dropdown.active .nav-dropdown-menu {
-    display: block;
+  .nav-dropdown-trigger {
+    pointer-events: none;
   }
 
   .nav-dropdown-menu a {
     padding: 12px 24px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: rgba(245, 240, 232, 0.5);
   }
 

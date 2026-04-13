@@ -203,6 +203,18 @@
     });
   }
 
+  /* ── Scroll Progress ─────────────────────── */
+  function initScrollProgress() {
+    var bar = document.getElementById('scrollProgress');
+    if (!bar) return;
+    window.addEventListener('scroll', function() {
+      var scrollTop = window.pageYOffset;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = (scrollTop / docHeight) * 100;
+      bar.style.width = pct + '%';
+    });
+  }
+
   /* ── Back to top ────────────────────────── */
   function initBackToTop() {
     var btn = document.getElementById('backToTop');
@@ -306,6 +318,7 @@
     initLenis();
     initNavbarScroll();
     initMobileMenu();
+    initScrollProgress();
     initBackToTop();
     initCursor();
     initHeroReveal();

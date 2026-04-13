@@ -112,7 +112,7 @@ const PRODUCTS = {
       nameKey: 'prod.overshirt',
       price: 109,
       badge: null,
-      image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?w=600&h=750&fit=crop&q=80',
       sizes: ['S', 'M', 'L', 'XL']
     },
     {
@@ -198,7 +198,7 @@ const PRODUCTS = {
       nameKey: 'prod.patterned_short_sleeve',
       price: 69,
       badge: null,
-      image: 'https://images.unsplash.com/photo-1589310243389-96a5483213a8?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?w=600&h=750&fit=crop&q=80',
       sizes: ['S', 'M', 'L', 'XL']
     }
   ],
