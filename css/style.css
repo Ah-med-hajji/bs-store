@@ -217,15 +217,11 @@ a {
   right: 0;
   z-index: 1000;
   background: transparent;
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  transition: background 0.5s, backdrop-filter 0.5s, box-shadow 0.5s;
+  transition: background 0.5s, box-shadow 0.5s;
 }
 
 .navbar.scrolled {
-  background: rgba(245, 240, 232, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(245, 240, 232, 0.97);
   box-shadow: 0 2px 24px rgba(61, 52, 41, 0.06);
 }
 
@@ -442,8 +438,8 @@ a {
   display: none;
   flex-direction: column;
   gap: 5px;
-  background: rgba(42, 35, 28, 0.5);
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   cursor: pointer;
   padding: 10px;
   z-index: 1001;
