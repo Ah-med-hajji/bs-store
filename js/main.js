@@ -147,6 +147,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Hero Cinematic Animation =====
   function initHeroAnimation() {
+    // Load hero background image with fallback
+    var heroBg = document.getElementById('heroBg');
+    if (heroBg) {
+      var heroImg = new Image();
+      heroImg.onload = function() {
+        heroBg.style.backgroundImage = 'url(' + heroImg.src + ')';
+        heroBg.classList.add('loaded');
+      };
+      heroImg.src = 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=1200&h=800&fit=crop&q=60&auto=format';
+    }
+
     var heroElements = document.querySelectorAll('.hero-anim');
     heroElements.forEach(function(el) {
       var delay = parseFloat(el.dataset.delay) || 0;
@@ -171,17 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
         delay: 0.8
       }
     );
-
-    gsap.to('.hero', {
-      backgroundPositionY: '30%',
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '.hero',
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true
-      }
-    });
   }
 
   // ===== Scroll-Triggered Animations =====
@@ -348,6 +348,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
       });
     }
+
+    // Touch swipe support
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var isSwiping = false;
+
+    slider.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+      isSwiping = true;
+    }, { passive: true });
+
+    slider.addEventListener('touchmove', function(e) {
+      if (!isSwiping) return;
+      touchEndX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    slider.addEventListener('touchend', function(e) {
+      if (!isSwiping) return;
+      isSwiping = false;
+      touchEndX = e.changedTouches[0].screenX;
+      var diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0 && current < total - 1) {
+          goToSlide(current + 1);
+        } else if (diff < 0 && current > 0) {
+          goToSlide(current - 1);
+        }
+      }
+    }, { passive: true });
   }
 
   // ===== Scroll Progress Bar =====

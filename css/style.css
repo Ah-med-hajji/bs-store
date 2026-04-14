@@ -441,23 +441,24 @@ a {
 .hamburger {
   display: none;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   z-index: 1001;
   touch-action: manipulation;
   min-height: 44px;
   min-width: 44px;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .hamburger span {
   display: block;
-  width: 28px;
-  height: 2px;
+  width: 24px;
+  height: 2.5px;
   background: var(--cream);
   border-radius: 2px;
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -466,6 +467,10 @@ a {
 
 .navbar.scrolled .hamburger span {
   background: var(--brown-dark);
+}
+
+.hamburger.active span {
+  background: var(--cream);
 }
 
 .hamburger.active span:nth-child(1) {
@@ -488,18 +493,23 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3d3429 0%, #6b5b4e 40%, #8b7355 70%, #a89070 100%);
-  background-image: url('https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=1920&h=1080&fit=crop&q=80');
+  background: linear-gradient(135deg, #2a231c 0%, #3d3429 25%, #4a3f35 50%, #6b5b4e 75%, #3d3429 100%);
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   overflow: hidden;
-  animation: kenBurns 25s ease-in-out infinite alternate;
 }
 
-@keyframes kenBurns {
-  0% { background-size: cover; background-position: center; }
-  100% { background-size: 120%; background-position: center top; }
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.hero-bg.loaded {
+  opacity: 1;
 }
 
 .hero::before {
@@ -512,7 +522,7 @@ a {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 0%, rgba(61, 52, 41, 0.4) 100%);
+  background: radial-gradient(ellipse at center, rgba(42, 35, 28, 0.2) 0%, rgba(42, 35, 28, 0.6) 100%);
 }
 
 .hero-grain {
@@ -1242,7 +1252,7 @@ a {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .hamburger {
     display: flex;
   }
@@ -1269,6 +1279,7 @@ a {
     margin-left: 0;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: opacity 0.4s ease, visibility 0.4s ease;
     z-index: 999;
   }
@@ -1276,6 +1287,7 @@ a {
   .nav-links.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
   .nav-links li {
@@ -1300,6 +1312,7 @@ a {
     transform: none;
     background: transparent;
     backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     padding: 0;
     box-shadow: none;
     opacity: 1;
@@ -1317,20 +1330,8 @@ a {
     color: rgba(245, 240, 232, 0.5);
   }
 
-  .category-grid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-    margin: 0 auto;
-    gap: 20px;
-  }
-
-  .contact-grid {
-    grid-template-columns: 1fr;
-    max-width: 360px;
-  }
-
-  .about-stats {
-    grid-template-columns: 1fr;
+  .hero-scroll-indicator {
+    display: none;
   }
 
   .about,
@@ -1340,32 +1341,9 @@ a {
     padding: 80px 0;
   }
 
-  .hero-tagline {
-    font-size: 1rem;
-  }
-
-  .hero-scroll-indicator {
-    display: none;
-  }
-
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 32px;
-  }
-
-  .testimonial-card {
-    padding: 32px 20px;
-  }
-
-  .testimonial-text {
-    font-size: 1.1rem;
-  }
-
-  .back-to-top {
-    bottom: 20px;
-    right: 20px;
-    width: 44px;
-    height: 44px;
   }
 
   .marquee-section {
@@ -1383,5 +1361,42 @@ a {
   .btn-checkout,
   .btn-whatsapp {
     min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  .category-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+    gap: 20px;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+    max-width: 360px;
+  }
+
+  .about-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-tagline {
+    font-size: 1rem;
+  }
+
+  .testimonial-card {
+    padding: 32px 20px;
+  }
+
+  .testimonial-text {
+    font-size: 1.1rem;
+  }
+
+  .back-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
   }
 }

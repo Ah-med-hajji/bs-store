@@ -294,6 +294,3 @@ const CATEGORIES_META = {
     href: 'categories/accessories.html'
   }
 };
-
-/* Hero banner image */
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=1920&h=1080&fit=crop&q=80';
