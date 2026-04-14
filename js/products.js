@@ -147,7 +147,7 @@ const PRODUCTS = {
       nameKey: 'prod.crew_sweatshirt',
       price: 79,
       badge: 'NEW',
-      image: 'https://images.unsplash.com/photo-1614975059251-992f11792571?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=750&fit=crop&q=80',
       sizes: ['S', 'M', 'L', 'XL']
     },
     {
@@ -249,7 +249,7 @@ const PRODUCTS = {
       nameKey: 'prod.knit_tie',
       price: 39,
       badge: null,
-      image: 'https://images.unsplash.com/photo-1589756823695-278bc923a426?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1589465885857-44edb59bbff2?w=600&h=750&fit=crop&q=80',
       sizes: null
     }
   ]
