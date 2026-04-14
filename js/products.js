@@ -147,7 +147,7 @@ const PRODUCTS = {
       nameKey: 'prod.crew_sweatshirt',
       price: 79,
       badge: 'NEW',
-      image: 'https://images.unsplash.com/photo-1578768079470-e6a0f4e77b2f?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1614975059251-992f11792571?w=600&h=750&fit=crop&q=80',
       sizes: ['S', 'M', 'L', 'XL']
     },
     {
@@ -174,7 +174,7 @@ const PRODUCTS = {
       nameKey: 'prod.oxford_shirt',
       price: 79,
       badge: null,
-      image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736c10?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1603252109303-2751441dd157?w=600&h=750&fit=crop&q=80',
       sizes: ['S', 'M', 'L', 'XL']
     },
     {
@@ -225,7 +225,7 @@ const PRODUCTS = {
       nameKey: 'prod.classic_cap',
       price: 35,
       badge: null,
-      image: 'https://images.unsplash.com/photo-1588850561407-ed78c334e67a?w=600&h=750&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1534215754734-18e55d13e346?w=600&h=750&fit=crop&q=80',
       sizes: null
     },
     {
