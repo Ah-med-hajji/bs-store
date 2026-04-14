@@ -442,10 +442,10 @@ a {
   display: none;
   flex-direction: column;
   gap: 5px;
-  background: none;
+  background: rgba(42, 35, 28, 0.5);
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 10px;
   z-index: 1001;
   touch-action: manipulation;
   min-height: 44px;
@@ -453,24 +453,34 @@ a {
   justify-content: center;
   align-items: center;
   position: relative;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .hamburger span {
   display: block;
-  width: 24px;
-  height: 2.5px;
-  background: var(--cream);
+  width: 22px;
+  height: 2px;
+  background: #ffffff;
   border-radius: 2px;
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center;
+}
+
+.navbar.scrolled .hamburger {
+  background: var(--cream-dark);
 }
 
 .navbar.scrolled .hamburger span {
   background: var(--brown-dark);
 }
 
+.hamburger.active {
+  background: transparent;
+}
+
 .hamburger.active span {
-  background: var(--cream);
+  background: #ffffff;
 }
 
 .hamburger.active span:nth-child(1) {
