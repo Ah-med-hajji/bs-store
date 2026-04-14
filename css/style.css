@@ -1326,6 +1326,10 @@ a {
     min-width: auto;
   }
 
+  .nav-dropdown:hover .nav-dropdown-menu {
+    transform: none;
+  }
+
   .nav-dropdown-trigger {
     pointer-events: none;
   }
