@@ -26,7 +26,7 @@ BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page stat
 
 ## Design
 - **Theme**: Earth tones — cream (#f5f0e8), brown (#6b5b4e), olive (#7d8471), gold (#c4a882)
-- **Layout**: Mobile-first responsive, premium scroll animations, frosted-glass navbar
+- **Layout**: Mobile-first responsive, premium scroll animations, solid navbar (no backdrop-filter)
 - **Sections**: Hero → Marquee banner → About → Category grid (6 categories) → Testimonials → Contact → Footer
 - **CSS Variables**: All colors/fonts/shadows defined in `:root` in style.css
 
@@ -35,12 +35,17 @@ BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page stat
 ### Component Injection
 Shared UI components (navbar, footer, cart sidebar, order form) are injected by `js/components.js` into placeholder `<div>` elements on every page. Uses string concatenation (not template literals) for reliable HTML generation. Runs immediately as an IIFE, before DOMContentLoaded.
 
+### Navbar (no backdrop-filter)
+**CRITICAL: Never add `backdrop-filter` or `-webkit-backdrop-filter` to `.navbar` or any ancestor of `.nav-links`.** Per CSS spec, `backdrop-filter` creates a new containing block for `position: fixed` descendants. On mobile, `.nav-links` uses `position: fixed; inset: 0` for the full-screen overlay — if `backdrop-filter` is on `.navbar`, the overlay gets clipped to the navbar's 80px height instead of filling the viewport. The scrolled navbar uses `rgba(245, 240, 232, 0.97)` background with no blur.
+
 ### Navbar Layout
 HTML order in nav-container: `logo → nav-links → nav-actions → hamburger`
 - Desktop: nav-links uses `margin-left: auto` to center; nav-actions sits right
 - Mobile: nav-links hidden (overlay); nav-actions uses `margin-left: auto` for right-corner placement; hamburger visible
 - Shop dropdown always expanded as flat list in mobile menu (no hover dependency)
+- Mobile dropdown has `transform: none` override to prevent `translateX(-50%)` shift from desktop hover rule
 - Cart icon and language toggle always visible on all screen sizes
+- Hamburger button uses frosted-glass style (`rgba(255,255,255,0.15)` + border) for visibility on dark hero
 
 ### i18n System
 Translation uses `data-i18n="key"` attributes. The `js/i18n.js` file contains a `translations` object with `fr` (default) and `en` keys. All French text uses proper Unicode accents (`\u00e9` for é, etc.). `applyLanguage()` swaps all text on load. Language preference saved to localStorage. When toggled, dynamic content (product grid, cart sidebar) is re-rendered with `renderProductGrid()` and `Cart.renderSidebar()`.
@@ -50,6 +55,12 @@ Cart uses localStorage (key: `bs-store-cart`). Products are added from category 
 
 ### Product Data
 Centralized in `js/products.js` as the single source of truth. All 29 products across 6 categories have unique Unsplash image URLs. Category pages read `data-category` from `<body>` and render dynamically via `js/category.js`.
+
+### Hero Section
+Uses a CSS gradient background (dark earth tones) as the base. A hero image is loaded asynchronously via JS (`initHeroAnimation` in main.js) and faded in with `opacity` transition once loaded. This ensures the hero renders instantly without waiting for the image.
+
+### Testimonials
+Uses a GSAP-powered slider with dot navigation. Supports both autoplay (5s interval, pauses on hover) and touch swipe on mobile.
 
 ## File Structure
 ```
@@ -167,3 +178,9 @@ Or just push to GitHub `master` — Vercel auto-deploys.
 ## Current State — TODO
 - [ ] **Replace placeholder images**: All product images use Unsplash stock photos. Replace with real product photos by updating URLs in `js/products.js`
 - [ ] **Google Search Console**: Submit sitemap after verifying custom domain
+- [ ] **Unstable Unsplash URLs**: Some Unsplash photo URLs have stopped loading over time and needed replacement. When replacing broken images, use completely different photo IDs — don't just tweak parameters.
+
+## Gotchas & Lessons Learned
+- **Never use `backdrop-filter` on `.navbar`**: Creates a CSS containing block that breaks `position: fixed` children (mobile nav overlay). This was the root cause of the hamburger menu bug reported 4+ times.
+- **Mobile dropdown transform override**: The desktop hover rule `.nav-dropdown:hover .nav-dropdown-menu` applies `translateX(-50%)` with higher specificity than the mobile `.nav-dropdown-menu { transform: none }`. Must add `.nav-dropdown:hover .nav-dropdown-menu { transform: none }` inside the 768px breakpoint.
+- **Unsplash URLs can break**: Photo IDs may be removed or made private. If an image doesn't load, swap the entire photo ID, not just URL parameters.
