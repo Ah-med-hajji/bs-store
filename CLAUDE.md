@@ -1,21 +1,23 @@
-# BS Store — Landing Page & Category Catalog
+# BS Store — Next.js + Supabase E-Commerce
 
 ## Project Overview
-BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page static site with category browsing, shopping cart, WhatsApp ordering, and French/English translation. French is the default language. The site is built to premium/agency quality with advanced animations and interactions.
+BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Next.js App Router application with Supabase backend, admin panel at `/admin`, shopping cart, WhatsApp ordering, and French/English translation. French is the default language. The storefront has premium scroll animations and interactions.
 
 ## Tech Stack
-- Static HTML/CSS/JS (no framework)
-- **GSAP 3** + ScrollTrigger (CDN) — scroll animations, text reveals, counters, parallax
-- **Lenis** (CDN) — buttery-smooth scrolling
-- Deployed on **Vercel** (zero config, auto-deploys from GitHub)
-- Fonts: Playfair Display (headings) + Inter (body) via Google Fonts
-- Images: Unsplash free stock photos (placeholder URLs, replaceable)
+- **Next.js 15** (App Router) + TypeScript
+- **Supabase** — Postgres database + Storage for product images
+- **GSAP 3** + ScrollTrigger (CDN) — scroll animations, text reveals, counters
+- **Lenis** (npm) — buttery-smooth scrolling
+- **jose** — JWT signing/verification for admin auth
+- Deployed on **Vercel** (auto-deploys from GitHub `master`)
+- Fonts: Playfair Display (headings) + Inter (body) via `next/font/google`
 
 ## Live URL & Repo
 - **Production**: https://bs-store.tn/ (custom domain, connected and live)
 - **Vercel project**: ahmedhajji5401-5125s-projects/bs-store
 - **GitHub**: https://github.com/Ah-med-hajji/bs-store (pushes to `master` auto-deploy)
 - **GitHub owner**: Ah-med-hajji
+- **Supabase project ref**: sfokgucjmrxifngcgcpk
 
 ## Business Info
 - **Brand**: BS Store (Ben Saad Store)
@@ -27,66 +29,100 @@ BS Store (Ben Saad Store) is a Tunisian menswear clothing brand. Multi-page stat
 ## Design
 - **Theme**: Earth tones — cream (#f5f0e8), brown (#6b5b4e), olive (#7d8471), gold (#c4a882)
 - **Layout**: Mobile-first responsive, premium scroll animations, solid navbar (no backdrop-filter)
-- **Sections**: Hero → Marquee banner → About → Category grid (6 categories) → Testimonials → Contact → Footer
-- **CSS Variables**: All colors/fonts/shadows defined in `:root` in style.css
+- **Sections**: Hero → Marquee banner → About → Category grid → Testimonials → Contact → Footer
+- **CSS Variables**: All colors/fonts/shadows defined in `:root` in `css/globals.css`
 
 ## Architecture
 
-### Component Injection
-Shared UI components (navbar, footer, cart sidebar, order form) are injected by `js/components.js` into placeholder `<div>` elements on every page. Uses string concatenation (not template literals) for reliable HTML generation. Runs immediately as an IIFE, before DOMContentLoaded.
+### Route Structure
+```
+app/
+├── layout.tsx                 # Root layout: <html>, <body>, fonts, GSAP scripts, globals.css
+├── (storefront)/
+│   ├── layout.tsx             # LanguageProvider + StorefrontShell (Navbar, Footer, Cart, etc.)
+│   ├── page.tsx               # Homepage (dynamic, fetches categories from Supabase)
+│   └── categories/[slug]/
+│       └── page.tsx           # Category page (dynamic, fetches category + products)
+├── admin/
+│   ├── layout.tsx             # Admin sidebar shell
+│   ├── login/page.tsx         # Password login form
+│   ├── page.tsx               # Dashboard
+│   ├── categories/page.tsx    # Category CRUD
+│   └── products/page.tsx      # Product CRUD with image upload
+├── api/
+│   ├── auth/{login,logout}/route.ts
+│   ├── categories/[id]/route.ts
+│   ├── products/[id]/route.ts
+│   └── upload/route.ts
+├── sitemap.ts, robots.ts
+└── not-found.tsx
+```
 
-### Navbar (no backdrop-filter)
-**CRITICAL: Never add `backdrop-filter` or `-webkit-backdrop-filter` to `.navbar` or any ancestor of `.nav-links`.** Per CSS spec, `backdrop-filter` creates a new containing block for `position: fixed` descendants. On mobile, `.nav-links` uses `position: fixed; inset: 0` for the full-screen overlay — if `backdrop-filter` is on `.navbar`, the overlay gets clipped to the navbar's 80px height instead of filling the viewport. The scrolled navbar uses `rgba(245, 240, 232, 0.97)` background with no blur.
+### Authentication
+- Admin password stored as `ADMIN_PASSWORD` env variable
+- `POST /api/auth/login` verifies password → signs JWT → sets HTTP-only cookie (`bs-admin-session`, 24h expiry)
+- JWT signed with HS256 using `JWT_SECRET` env variable
+- `middleware.ts` protects `/admin/*` and `/api/*` routes — verifies JWT using **Web Crypto API** (Edge Runtime compatible, NOT jose)
+- Admin panel at `/admin`, login at `/admin/login`
 
-### Navbar Layout
-HTML order in nav-container: `logo → nav-links → nav-actions → hamburger`
-- Desktop: nav-links uses `margin-left: auto` to center; nav-actions sits right
-- Mobile: nav-links hidden (overlay); nav-actions uses `margin-left: auto` for right-corner placement; hamburger visible
-- Shop dropdown always expanded as flat list in mobile menu (no hover dependency)
-- Mobile dropdown has `transform: none` override to prevent `translateX(-50%)` shift from desktop hover rule
-- Cart icon and language toggle always visible on all screen sizes
-- Hamburger button uses frosted-glass style (`rgba(255,255,255,0.15)` + border) for visibility on dark hero
+### Data Model (Supabase)
+**`categories` table**: id (UUID), slug, name_fr, name_en, subtitle_fr, subtitle_en, card_desc_fr, card_desc_en, desc_fr, desc_en, image_url, sort_order, created_at
+
+**`products` table**: id (UUID), category_id (FK → categories), slug, name_fr, name_en, price, badge, image_url, sizes (TEXT[]), sort_order, created_at
+
+- Product/category names stored as `name_fr`/`name_en` columns (editable by admin, not translation keys)
+- Static UI text (nav, hero, about, etc.) kept in `lib/i18n.ts`
+- RLS enabled: public SELECT on both tables, admin operations use service_role key
+
+### Storefront Components
+All in `components/storefront/`. Client Components using React hooks:
+- `StorefrontShell` — orchestrates Navbar, Footer, Cart, Preloader, Cursor, etc.
+- `Navbar` — fixed, scroll state, hamburger for mobile, shop dropdown from Supabase categories
+- `CartSidebar` + `OrderForm` — slide-in cart, WhatsApp message builder
+- `ProductCard` — size selector, add-to-cart with feedback
+- `HeroSection`, `AboutSection`, `CategoryGrid`, `TestimonialsSection`, `ContactSection` — GSAP animated
+- `Preloader`, `CustomCursor`, `ScrollProgress`, `BackToTop`, `MarqueeBanner` — UI utilities
+
+### React Hooks
+- `useLanguage` — FR/EN state via React Context + localStorage (`bs-store-lang`)
+- `useCart(lang)` — full cart logic (localStorage `bs-store-cart`), WhatsApp message builder
+- `useGSAP` — registers ScrollTrigger plugin
+- `useLenis` — smooth scroll init with GSAP ticker integration
 
 ### i18n System
-Translation uses `data-i18n="key"` attributes. The `js/i18n.js` file contains a `translations` object with `fr` (default) and `en` keys. All French text uses proper Unicode accents (`\u00e9` for é, etc.). `applyLanguage()` swaps all text on load. Language preference saved to localStorage. When toggled, dynamic content (product grid, cart sidebar) is re-rendered with `renderProductGrid()` and `Cart.renderSidebar()`.
+Static UI text in `lib/i18n.ts` with `t(key, lang)` function. Product/category names come from Supabase. Language state shared via `LanguageProvider` context. Old cart items using `nameKey` format are automatically cleared on load.
 
 ### Cart System
-Cart uses localStorage (key: `bs-store-cart`). Products are added from category pages, managed in a slide-in sidebar (full-screen on mobile), and orders are confirmed via WhatsApp message to +21658113142. Order form includes 24 Tunisian governorates dropdown.
+Cart uses localStorage (key: `bs-store-cart`). Cart items store `name_fr`/`name_en` directly. Orders confirmed via WhatsApp message to +21658113142. Order form validates phone as 8 digits, includes 24 Tunisian governorates dropdown.
 
-### Product Data
-Centralized in `js/products.js` as the single source of truth. All 29 products across 6 categories have unique Unsplash image URLs. Category pages read `data-category` from `<body>` and render dynamically via `js/category.js`.
-
-### Hero Section
-Uses a CSS gradient background (dark earth tones) as the base. A hero image is loaded asynchronously via JS (`initHeroAnimation` in main.js) and faded in with `opacity` transition once loaded. This ensures the hero renders instantly without waiting for the image.
-
-### Testimonials
-Uses a GSAP-powered slider with dot navigation. Supports both autoplay (5s interval, pauses on hover) and touch swipe on mobile.
+### Navbar (no backdrop-filter)
+**CRITICAL: Never add `backdrop-filter` to `.navbar`.** It creates a CSS containing block that breaks `position: fixed` children (mobile nav overlay). The scrolled navbar uses `rgba(245, 240, 232, 0.97)` background with no blur. `backdrop-filter` is safe on `.nav-dropdown-menu` and the mobile `.nav-links` overlay itself.
 
 ## File Structure
 ```
 bs-store/
-├── index.html                    # Homepage with category grid
-├── categories/
-│   ├── tshirts-polos.html        # T-shirts & Polos (5 products)
-│   ├── pants-chinos.html         # Pants & Chinos (5 products)
-│   ├── jackets-coats.html        # Jackets & Coats (4 products)
-│   ├── hoodies-sweatshirts.html  # Hoodies & Sweatshirts (4 products)
-│   ├── shirts.html               # Shirts (5 products)
-│   └── accessories.html          # Accessories (6 products)
-├── css/
-│   ├── style.css                 # Main styles + category grid + nav actions + mobile fixes
-│   └── categories.css            # Category pages, cart sidebar, order form, size selectors
-├── js/
-│   ├── products.js               # Centralized product data + CATEGORIES_META (Unsplash images)
-│   ├── i18n.js                   # FR/EN translation system with proper Unicode accents
-│   ├── components.js             # Shared navbar/footer/cart/form injection (IIFE, runs immediately)
-│   ├── cart.js                   # Cart logic, order form, WhatsApp integration
-│   ├── category.js               # Category page rendering, scroll progress, GSAP animations
-│   └── main.js                   # Homepage animations (GSAP, Lenis, cursor, testimonials, etc.)
-├── favicon.svg                   # SVG favicon with "BS" initials
-├── sitemap.xml                   # SEO sitemap (bs-store.tn, 7 URLs)
-├── robots.txt                    # Allows all crawlers (bs-store.tn)
-└── CLAUDE.md                     # This file
+├── app/                          # Next.js App Router pages + API routes
+├── components/
+│   ├── storefront/               # 15 storefront React components
+│   └── admin/                    # AdminSidebar, ImageUpload
+├── hooks/                        # useCart, useLanguage, useGSAP, useLenis
+├── lib/
+│   ├── supabase/client.ts        # Browser Supabase client (anon key)
+│   ├── supabase/server.ts        # Server Supabase client (service_role key)
+│   ├── auth.ts                   # JWT helpers using jose (Node.js runtime only)
+│   ├── i18n.ts                   # Static UI translations (FR/EN)
+│   ├── types.ts                  # TypeScript interfaces
+│   └── constants.ts              # SHIPPING, WHATSAPP_NUMBER, GOVERNORATES
+├── css/globals.css               # All styles merged (style.css + categories.css + admin styles)
+├── middleware.ts                  # Auth middleware (Web Crypto API, Edge Runtime compatible)
+├── next.config.ts                # Image domains, old URL redirects
+├── supabase/
+│   ├── migrations/001_initial.sql # Database schema + RLS + storage bucket
+│   └── seed.ts                   # Seeds 6 categories + 29 products
+├── public/favicon.svg
+├── _legacy/                      # Old static HTML/CSS/JS files (kept for reference)
+├── package.json, tsconfig.json
+└── CLAUDE.md
 ```
 
 ## Categories & Products
@@ -100,47 +136,40 @@ bs-store/
 | Shirts | Linen Button-Down, Oxford Shirt, Flannel Shirt, Denim Shirt, Patterned Short Sleeve | 69-99 |
 | Accessories | Leather Belt, Canvas Tote Bag, Classic Cap, Minimalist Watch, Sunglasses, Knit Tie | 35-89 |
 
-## Script Loading Order
-```html
-<!-- Shared across all pages -->
-<script src="gsap.min.js"></script>
-<script src="ScrollTrigger.min.js"></script>
-<script src="lenis.min.js"></script>
-<script src="js/products.js"></script>      <!-- Product data + CATEGORIES_META -->
-<script src="js/i18n.js"></script>           <!-- Translation system (defines getCurrentLang, t, applyLanguage, toggleLanguage) -->
-<script src="js/components.js"></script>     <!-- Injects navbar/footer/cart/form (IIFE, uses getCurrentLang from i18n.js) -->
-<script src="js/cart.js"></script>           <!-- Cart logic, exposes global Cart object -->
-<!-- Page-specific (one or the other): -->
-<script src="js/main.js"></script>           <!-- Homepage only -->
-<script src="js/category.js"></script>       <!-- Category pages only -->
-```
-
 ## Key Code Patterns
 
-### Adding a new product
-1. Add entry to `PRODUCTS` object in `js/products.js` with unique Unsplash image URL
-2. Add name translations to `translations` object in `js/i18n.js` (both `fr` and `en`)
-3. Product renders automatically on its category page
+### Adding a new product (via Admin Panel)
+1. Go to `/admin/products`, click "Add Product"
+2. Fill in FR/EN names, price, category, sizes, upload image
+3. Done — product appears on the category page immediately
 
-### Adding a new category
-1. Add category key to `PRODUCTS` in `js/products.js`
-2. Add category metadata to `CATEGORIES_META`
-3. Add translations to `js/i18n.js` (name, subtitle, desc, card_desc)
-4. Create new HTML file in `categories/` following existing pattern
-5. Add link in `components.js` navbar dropdown and footer
-6. Add category card in `index.html`
+### Adding a new product (via code)
+1. Insert row into Supabase `products` table with `category_id`, `name_fr`, `name_en`, etc.
 
-### i18n
-- Add `data-i18n="key"` attribute to any text element
-- Add translations for both `fr` and `en` keys in `js/i18n.js`
-- For attributes (placeholder), use `data-i18n-attr="placeholder:key"`
-- French text must use Unicode escapes for accents (`\u00e9` = é) in JS strings
+### Adding a new category (via Admin Panel)
+1. Go to `/admin/categories`, click "Add Category"
+2. Fill in FR/EN names, subtitles, descriptions, upload image
+3. Category appears in navbar dropdown and homepage grid
 
-### Cart
-- Products use `nameKey` (i18n key) so names translate when language changes
-- `Cart.addItem()` checks for existing id+size combo and increments quantity
-- Order form validates phone as 8 digits, sends via `wa.me/21658113142`
-- Cart sidebar is full-screen on mobile (<640px)
+### Adding a new category (via code)
+1. Insert row into Supabase `categories` table
+2. Category auto-appears in navbar (fetched dynamically) and homepage grid
+
+### i18n (static UI text only)
+- Use `t(key, lang)` from `lib/i18n.ts`
+- Add translations for both `fr` and `en` keys in the `translations` object
+- Product/category names are NOT in i18n — they come from Supabase `name_fr`/`name_en`
+
+## Environment Variables
+Set in `.env.local` (local) and Vercel project settings:
+- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon/public key
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service_role key (server-side only)
+- `ADMIN_PASSWORD` — Password for admin login
+- `JWT_SECRET` — Secret for signing admin JWT tokens
+
+## Deployment
+Push to GitHub `master` — Vercel auto-deploys.
 
 ## WhatsApp Message Format
 ```
@@ -160,27 +189,24 @@ bs-store/
 ```
 
 ## SEO
-- Structured data (JSON-LD): ClothingStore + LocalBusiness with absolute logo URL
-- Open Graph + Twitter Card meta tags on all pages
+- Dynamic `sitemap.ts` (fetches category slugs from Supabase)
+- Dynamic `robots.ts` allowing all crawlers
+- Open Graph + Twitter Card meta tags
 - Canonical URLs pointing to `bs-store.tn`
-- `sitemap.xml` with all 7 pages (homepage + 6 categories)
-- `robots.txt` allowing all crawlers
-- Semantic HTML with proper heading hierarchy (h1 per page, h2 for sections)
-- Alt text on all product images
-- Mobile-friendly (responsive, 44px touch targets)
-
-## Deployment
-```bash
-cd bs-store && npx vercel --prod
-```
-Or just push to GitHub `master` — Vercel auto-deploys.
+- Old URL redirects: `/categories/X.html` → `/categories/X` (301, preserves SEO)
+- Semantic HTML with proper heading hierarchy
 
 ## Current State — TODO
-- [ ] **Replace placeholder images**: All product images use Unsplash stock photos. Replace with real product photos by updating URLs in `js/products.js`
+- [ ] **Replace placeholder images**: All product images use Unsplash stock photos. Replace with real product photos via admin panel image upload.
 - [ ] **Google Search Console**: Submit sitemap after verifying custom domain
-- [ ] **Unstable Unsplash URLs**: Some Unsplash photo URLs have stopped loading over time and needed replacement. When replacing broken images, use completely different photo IDs — don't just tweak parameters.
+- [ ] **Unstable Unsplash URLs**: Some Unsplash photo URLs may stop loading. Replace via admin panel.
+- [ ] **Legacy cleanup**: Old static files (index.html, categories/, js/, css/style.css, css/categories.css) still in repo. Can be removed or moved to `_legacy/`.
 
 ## Gotchas & Lessons Learned
-- **Never use `backdrop-filter` on `.navbar`**: Creates a CSS containing block that breaks `position: fixed` children (mobile nav overlay). This was the root cause of the hamburger menu bug reported 4+ times.
-- **Mobile dropdown transform override**: The desktop hover rule `.nav-dropdown:hover .nav-dropdown-menu` applies `translateX(-50%)` with higher specificity than the mobile `.nav-dropdown-menu { transform: none }`. Must add `.nav-dropdown:hover .nav-dropdown-menu { transform: none }` inside the 768px breakpoint.
-- **Unsplash URLs can break**: Photo IDs may be removed or made private. If an image doesn't load, swap the entire photo ID, not just URL parameters.
+- **Never use `backdrop-filter` on `.navbar`**: Creates a CSS containing block that breaks `position: fixed` children (mobile nav overlay).
+- **Middleware must use Web Crypto API**: Vercel Edge Runtime doesn't support `jose` (Node.js APIs). The `middleware.ts` uses `crypto.subtle.verify` for JWT verification instead.
+- **Root layout must have `<html>` and `<body>`**: Next.js requires these in `app/layout.tsx`. Route group layouts (`(storefront)/layout.tsx`, `admin/layout.tsx`) must NOT have their own `<html>` tags.
+- **Mobile dropdown transform override**: Desktop hover rule applies `translateX(-50%)` — must override to `none` inside 768px breakpoint.
+- **Unsplash URLs can break**: Photo IDs may be removed. Replace via admin panel.
+- **Old cart format migration**: Cart items from the old static site used `nameKey` — new format stores `name_fr`/`name_en`. Old items are auto-cleared.
+- **Supabase server client**: `createServerClient()` throws if env vars aren't set. Pages use try/catch and `dynamic = 'force-dynamic'` to handle missing config gracefully.
