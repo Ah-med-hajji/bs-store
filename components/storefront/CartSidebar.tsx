@@ -16,7 +16,7 @@ export default function CartSidebar() {
     sidebarOpen,
     setSidebarOpen,
     setOrderFormOpen,
-  } = useCart(lang);
+  } = useCart();
 
   const handleClose = () => {
     setSidebarOpen(false);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useCart } from '@/hooks/useCart';
+import { CartProvider } from '@/hooks/useCart';
 import { Category } from '@/lib/types';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -15,7 +15,6 @@ import BackToTop from './BackToTop';
 
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const { lang } = useLanguage();
-  const cart = useCart(lang);
   const [categories, setCategories] = useState<Category[]>([]);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -42,7 +41,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <CartProvider lang={lang}>
       {!preloaderDone && <Preloader onComplete={() => setPreloaderDone(true)} />}
       <ScrollProgress />
       <CustomCursor />
@@ -52,6 +51,6 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
       <CartSidebar />
       <OrderForm />
       <BackToTop />
-    </>
+    </CartProvider>
   );
 }

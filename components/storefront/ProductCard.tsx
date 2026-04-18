@@ -14,7 +14,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, categorySlug }: ProductCardProps) {
   const { lang } = useLanguage();
-  const { addItem } = useCart(lang);
+  const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
 

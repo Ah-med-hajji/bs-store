@@ -85,7 +85,7 @@ All in `components/storefront/`. Client Components using React hooks:
 
 ### React Hooks
 - `useLanguage` — FR/EN state via React Context + localStorage (`bs-store-lang`)
-- `useCart(lang)` — full cart logic (localStorage `bs-store-cart`), WhatsApp message builder
+- `useCart()` — **React Context** (`CartProvider`), shared cart state via localStorage (`bs-store-cart`). All storefront components must use this context (not independent hook instances). Provider wraps children in `StorefrontShell`.
 - `useGSAP` — registers ScrollTrigger plugin
 - `useLenis` — smooth scroll init with GSAP ticker integration
 
@@ -93,7 +93,16 @@ All in `components/storefront/`. Client Components using React hooks:
 Static UI text in `lib/i18n.ts` with `t(key, lang)` function. Product/category names come from Supabase. Language state shared via `LanguageProvider` context. Old cart items using `nameKey` format are automatically cleared on load.
 
 ### Cart System
-Cart uses localStorage (key: `bs-store-cart`). Cart items store `name_fr`/`name_en` directly. Orders confirmed via WhatsApp message to +21658113142. Order form validates phone as 8 digits, includes 24 Tunisian governorates dropdown.
+Cart is a **React Context** (`CartProvider` in `hooks/useCart.tsx`). `StorefrontShell` wraps all storefront components in `<CartProvider>`. All cart consumers (`Navbar`, `ProductCard`, `CartSidebar`, `OrderForm`) call `useCart()` (no args) to access shared state. Cart uses localStorage (key: `bs-store-cart`). Cart items store `name_fr`/`name_en` directly. Adding an item auto-opens the sidebar. Orders confirmed via WhatsApp message to +21658113142. Order form validates phone as 8 digits, includes 24 Tunisian governorates dropdown.
+
+### Admin Panel — French Input + Auto-Translation
+Admin forms only show French input fields. On submit, French text is auto-translated to English via MyMemory API (`lib/translate.ts`: `translateFrToEn`, `translateFields`). Falls back to French text if API fails. API routes still receive and store both `name_fr` and `name_en`. Product sizes use checkbox selection (XS–XXXL) instead of text input. Image upload goes through `/api/upload` first (returns URL string), then the URL is sent as `image_url` in the product/category form data.
+
+### Image Specifications
+See `image_details.md` in the project root for full image specs. Quick reference:
+- **Products**: 4:5 portrait, 1200x1500px ideal, JPG/WebP, no transparent PNGs
+- **Categories**: 4:3 landscape, 1600x1200px ideal
+- **Hero banner**: 16:9 landscape, 2560x1440px ideal, edit `HeroSection.tsx` line 22 to change
 
 ### Navbar (no backdrop-filter)
 **CRITICAL: Never add `backdrop-filter` to `.navbar`.** It creates a CSS containing block that breaks `position: fixed` children (mobile nav overlay). The scrolled navbar uses `rgba(245, 240, 232, 0.97)` background with no blur. `backdrop-filter` is safe on `.nav-dropdown-menu` and the mobile `.nav-links` overlay itself.
@@ -105,11 +114,12 @@ bs-store/
 ├── components/
 │   ├── storefront/               # 15 storefront React components
 │   └── admin/                    # AdminSidebar, ImageUpload
-├── hooks/                        # useCart, useLanguage, useGSAP, useLenis
+├── hooks/                        # useCart (CartProvider context), useLanguage, useGSAP, useLenis
 ├── lib/
 │   ├── supabase/client.ts        # Browser Supabase client (anon key)
 │   ├── supabase/server.ts        # Server Supabase client (service_role key)
 │   ├── auth.ts                   # JWT helpers using jose (Node.js runtime only)
+│   ├── translate.ts              # MyMemory API translation (FR→EN) for admin forms
 │   ├── i18n.ts                   # Static UI translations (FR/EN)
 │   ├── types.ts                  # TypeScript interfaces
 │   └── constants.ts              # SHIPPING, WHATSAPP_NUMBER, GOVERNORATES
@@ -140,7 +150,7 @@ bs-store/
 
 ### Adding a new product (via Admin Panel)
 1. Go to `/admin/products`, click "Add Product"
-2. Fill in FR/EN names, price, category, sizes, upload image
+2. Fill in name (French only — English auto-translated), price, category, select sizes via checkboxes, upload image
 3. Done — product appears on the category page immediately
 
 ### Adding a new product (via code)
@@ -148,7 +158,7 @@ bs-store/
 
 ### Adding a new category (via Admin Panel)
 1. Go to `/admin/categories`, click "Add Category"
-2. Fill in FR/EN names, subtitles, descriptions, upload image
+2. Fill in name, subtitle, descriptions (French only — English auto-translated), upload image
 3. Category appears in navbar dropdown and homepage grid
 
 ### Adding a new category (via code)
@@ -210,3 +220,8 @@ Push to GitHub `master` — Vercel auto-deploys.
 - **Unsplash URLs can break**: Photo IDs may be removed. Replace via admin panel.
 - **Old cart format migration**: Cart items from the old static site used `nameKey` — new format stores `name_fr`/`name_en`. Old items are auto-cleared.
 - **Supabase server client**: `createServerClient()` throws if env vars aren't set. Pages use try/catch and `dynamic = 'force-dynamic'` to handle missing config gracefully.
+- **Cart must be a React Context, not a plain hook**: Each component calling a plain `useCart()` hook gets its own independent state. The cart is now a `CartProvider` context wrapping the storefront. All cart consumers call `useCart()` (no lang argument).
+- **Admin image upload sends `image_url` string, not `image` File**: The `ImageUpload` component uploads to `/api/upload` first, gets a URL, and sends it as `image_url` in the form. API routes must read both `image` (File, for direct upload) and `image_url` (string, from pre-upload).
+- **Vercel framework preset must be "Next.js"**: If set to "Other", Vercel serves the `public/` directory as static files and returns 404 for all routes.
+- **SSO Deployment Protection blocks public access**: If enabled without a custom domain, all visitors get 401/404. Disable it via `vercel project protection disable --sso`.
+- **No transparent PNGs for products**: Transparent backgrounds render as blank brown space in product cards (cream-dark CSS background). Use JPG with solid backgrounds instead.

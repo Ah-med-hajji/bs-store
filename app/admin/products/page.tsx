@@ -3,14 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Category, Product } from '@/lib/types';
 import ImageUpload from '@/components/admin/ImageUpload';
+import { translateFrToEn } from '@/lib/translate';
+
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const;
 
 const EMPTY_FORM: ProductFormState = {
   name_fr: '',
-  name_en: '',
   price: '',
   badge: '',
   category_id: '',
-  sizes: '',
+  sizes: [],
   slug: '',
   sort_order: '0',
   image_url: '',
@@ -18,11 +20,10 @@ const EMPTY_FORM: ProductFormState = {
 
 interface ProductFormState {
   name_fr: string;
-  name_en: string;
   price: string;
   badge: string;
   category_id: string;
-  sizes: string;
+  sizes: string[];
   slug: string;
   sort_order: string;
   image_url: string;
@@ -67,7 +68,7 @@ export default function AdminProductsPage() {
 
   function getCategoryName(categoryId: string) {
     const cat = categories.find((c) => c.id === categoryId);
-    return cat ? cat.name_en : 'Unknown';
+    return cat ? cat.name_fr : 'Unknown';
   }
 
   const filteredProducts =
@@ -85,11 +86,10 @@ export default function AdminProductsPage() {
     setEditing(prod);
     setForm({
       name_fr: prod.name_fr,
-      name_en: prod.name_en,
       price: String(prod.price),
       badge: prod.badge || '',
       category_id: prod.category_id,
-      sizes: prod.sizes ? prod.sizes.join(', ') : '',
+      sizes: prod.sizes ? [...prod.sizes] : [],
       slug: prod.slug,
       sort_order: String(prod.sort_order),
       image_url: prod.image_url || '',
@@ -103,8 +103,20 @@ export default function AdminProductsPage() {
     setForm(EMPTY_FORM);
   }
 
-  function updateField(field: keyof ProductFormState, value: string) {
+  function updateField(
+    field: Exclude<keyof ProductFormState, 'sizes'>,
+    value: string
+  ) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function toggleSize(size: string) {
+    setForm((prev) => ({
+      ...prev,
+      sizes: prev.sizes.includes(size)
+        ? prev.sizes.filter((s) => s !== size)
+        : [...prev.sizes, size],
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -112,13 +124,16 @@ export default function AdminProductsPage() {
     setSaving(true);
 
     try {
+      // Auto-translate name_fr to name_en
+      const name_en = await translateFrToEn(form.name_fr);
+
       const body = new FormData();
       body.append('name_fr', form.name_fr);
-      body.append('name_en', form.name_en);
+      body.append('name_en', name_en);
       body.append('price', form.price);
       body.append('badge', form.badge);
       body.append('category_id', form.category_id);
-      body.append('sizes', form.sizes);
+      body.append('sizes', JSON.stringify(form.sizes));
       body.append('slug', form.slug);
       body.append('sort_order', form.sort_order);
       if (form.image_url) {
@@ -184,7 +199,7 @@ export default function AdminProductsPage() {
             <option value="all">All Categories</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.name_en}
+                {cat.name_fr}
               </option>
             ))}
           </select>
@@ -203,8 +218,7 @@ export default function AdminProductsPage() {
             <thead>
               <tr>
                 <th>Thumbnail</th>
-                <th>Name (FR)</th>
-                <th>Name (EN)</th>
+                <th>Name</th>
                 <th>Price</th>
                 <th>Category</th>
                 <th>Badge</th>
@@ -219,7 +233,7 @@ export default function AdminProductsPage() {
                     {prod.image_url ? (
                       <img
                         src={prod.image_url}
-                        alt={prod.name_en}
+                        alt={prod.name_fr}
                         className="admin-table-thumb"
                       />
                     ) : (
@@ -239,7 +253,6 @@ export default function AdminProductsPage() {
                     )}
                   </td>
                   <td>{prod.name_fr}</td>
-                  <td>{prod.name_en}</td>
                   <td>{prod.price} TND</td>
                   <td>{getCategoryName(prod.category_id)}</td>
                   <td>
@@ -318,23 +331,12 @@ export default function AdminProductsPage() {
             <form onSubmit={handleSubmit}>
               <div className="admin-form-grid">
                 <div className="form-group">
-                  <label htmlFor="prod-name-fr">Name (FR) *</label>
+                  <label htmlFor="prod-name">Name *</label>
                   <input
-                    id="prod-name-fr"
+                    id="prod-name"
                     type="text"
                     value={form.name_fr}
                     onChange={(e) => updateField('name_fr', e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="prod-name-en">Name (EN) *</label>
-                  <input
-                    id="prod-name-en"
-                    type="text"
-                    value={form.name_en}
-                    onChange={(e) => updateField('name_en', e.target.value)}
                     required
                   />
                 </div>
@@ -363,7 +365,7 @@ export default function AdminProductsPage() {
                     <option value="">Select a category</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.name_en}
+                        {cat.name_fr}
                       </option>
                     ))}
                   </select>
@@ -398,19 +400,24 @@ export default function AdminProductsPage() {
                     type="text"
                     value={form.badge}
                     onChange={(e) => updateField('badge', e.target.value)}
-                    placeholder="e.g. NOUVEAU, NEW"
+                    placeholder="e.g. NOUVEAU"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="prod-sizes">Sizes (comma-separated)</label>
-                  <input
-                    id="prod-sizes"
-                    type="text"
-                    value={form.sizes}
-                    onChange={(e) => updateField('sizes', e.target.value)}
-                    placeholder="e.g. S, M, L, XL, XXL"
-                  />
+                <div className="form-group full-width">
+                  <label>Sizes</label>
+                  <div className="admin-size-checkboxes">
+                    {ALL_SIZES.map((size) => (
+                      <label key={size} className="admin-size-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={form.sizes.includes(size)}
+                          onChange={() => toggleSize(size)}
+                        />
+                        <span className="admin-size-checkbox-label">{size}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="form-group full-width">
@@ -430,7 +437,7 @@ export default function AdminProductsPage() {
                   style={{ flex: 1, justifyContent: 'center' }}
                 >
                   {saving
-                    ? 'Saving...'
+                    ? 'Translating & Saving...'
                     : editing
                     ? 'Update Product'
                     : 'Create Product'}

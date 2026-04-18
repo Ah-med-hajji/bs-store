@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import { CartItem } from '@/lib/types';
 import { SHIPPING, WHATSAPP_NUMBER } from '@/lib/constants';
 import { t } from '@/lib/i18n';
@@ -32,7 +32,36 @@ function saveItems(items: CartItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
-export function useCart(lang: Language) {
+interface CartContextValue {
+  items: CartItem[];
+  addItem: (product: CartItem) => void;
+  removeItem: (id: string, size: string | null) => void;
+  updateQuantity: (id: string, size: string | null, delta: number) => void;
+  getSubtotal: () => number;
+  getTotal: () => number;
+  clearCart: () => void;
+  itemCount: number;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+  orderFormOpen: boolean;
+  setOrderFormOpen: (open: boolean) => void;
+  sendWhatsAppOrder: (formData: {
+    name: string;
+    phone: string;
+    address: string;
+    governorate: string;
+  }) => void;
+}
+
+const CartContext = createContext<CartContextValue | null>(null);
+
+export function CartProvider({
+  lang,
+  children,
+}: {
+  lang: Language;
+  children: React.ReactNode;
+}) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orderFormOpen, setOrderFormOpen] = useState(false);
@@ -60,6 +89,7 @@ export function useCart(lang: Language) {
       saveItems(next);
       return next;
     });
+    setSidebarOpen(true);
   }, []);
 
   const removeItem = useCallback((id: string, size: string | null) => {
@@ -177,19 +207,33 @@ export function useCart(lang: Language) {
     [buildWhatsAppMessage, clearCart]
   );
 
-  return {
-    items,
-    addItem,
-    removeItem,
-    updateQuantity,
-    getSubtotal,
-    getTotal,
-    clearCart,
-    itemCount,
-    sidebarOpen,
-    setSidebarOpen,
-    orderFormOpen,
-    setOrderFormOpen,
-    sendWhatsAppOrder,
-  };
+  return (
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        getSubtotal,
+        getTotal,
+        clearCart,
+        itemCount,
+        sidebarOpen,
+        setSidebarOpen,
+        orderFormOpen,
+        setOrderFormOpen,
+        sendWhatsAppOrder,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+export function useCart(): CartContextValue {
+  const ctx = useContext(CartContext);
+  if (!ctx) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return ctx;
 }

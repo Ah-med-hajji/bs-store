@@ -74,6 +74,11 @@ export async function PUT(
     }
 
     const imageFile = formData.get('image') as File | null;
+    const imageUrlStr = formData.get('image_url') as string | null;
+
+    if (imageUrlStr !== null) {
+      updateData.image_url = imageUrlStr || null;
+    }
 
     if (imageFile) {
       const supabase = createServerClient();

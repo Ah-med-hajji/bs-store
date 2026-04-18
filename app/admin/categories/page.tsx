@@ -3,16 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Category } from '@/lib/types';
 import ImageUpload from '@/components/admin/ImageUpload';
+import { translateFields } from '@/lib/translate';
 
 const EMPTY_FORM: CategoryFormState = {
   name_fr: '',
-  name_en: '',
   subtitle_fr: '',
-  subtitle_en: '',
   card_desc_fr: '',
-  card_desc_en: '',
   desc_fr: '',
-  desc_en: '',
   slug: '',
   sort_order: '0',
   image_url: '',
@@ -20,13 +17,9 @@ const EMPTY_FORM: CategoryFormState = {
 
 interface CategoryFormState {
   name_fr: string;
-  name_en: string;
   subtitle_fr: string;
-  subtitle_en: string;
   card_desc_fr: string;
-  card_desc_en: string;
   desc_fr: string;
-  desc_en: string;
   slug: string;
   sort_order: string;
   image_url: string;
@@ -69,13 +62,9 @@ export default function AdminCategoriesPage() {
     setEditing(cat);
     setForm({
       name_fr: cat.name_fr,
-      name_en: cat.name_en,
       subtitle_fr: cat.subtitle_fr || '',
-      subtitle_en: cat.subtitle_en || '',
       card_desc_fr: cat.card_desc_fr || '',
-      card_desc_en: cat.card_desc_en || '',
       desc_fr: cat.desc_fr || '',
-      desc_en: cat.desc_en || '',
       slug: cat.slug,
       sort_order: String(cat.sort_order),
       image_url: cat.image_url || '',
@@ -98,15 +87,23 @@ export default function AdminCategoriesPage() {
     setSaving(true);
 
     try {
+      // Auto-translate FR fields to EN
+      const enFields = await translateFields({
+        name_en: form.name_fr,
+        subtitle_en: form.subtitle_fr,
+        card_desc_en: form.card_desc_fr,
+        desc_en: form.desc_fr,
+      });
+
       const body = new FormData();
       body.append('name_fr', form.name_fr);
-      body.append('name_en', form.name_en);
+      body.append('name_en', enFields.name_en);
       body.append('subtitle_fr', form.subtitle_fr);
-      body.append('subtitle_en', form.subtitle_en);
+      body.append('subtitle_en', enFields.subtitle_en);
       body.append('card_desc_fr', form.card_desc_fr);
-      body.append('card_desc_en', form.card_desc_en);
+      body.append('card_desc_en', enFields.card_desc_en);
       body.append('desc_fr', form.desc_fr);
-      body.append('desc_en', form.desc_en);
+      body.append('desc_en', enFields.desc_en);
       body.append('slug', form.slug);
       body.append('sort_order', form.sort_order);
       if (form.image_url) {
@@ -174,8 +171,7 @@ export default function AdminCategoriesPage() {
             <thead>
               <tr>
                 <th>Thumbnail</th>
-                <th>Name (FR)</th>
-                <th>Name (EN)</th>
+                <th>Name</th>
                 <th>Slug</th>
                 <th>Sort Order</th>
                 <th>Actions</th>
@@ -188,7 +184,7 @@ export default function AdminCategoriesPage() {
                     {cat.image_url ? (
                       <img
                         src={cat.image_url}
-                        alt={cat.name_en}
+                        alt={cat.name_fr}
                         className="admin-table-thumb"
                       />
                     ) : (
@@ -208,7 +204,6 @@ export default function AdminCategoriesPage() {
                     )}
                   </td>
                   <td>{cat.name_fr}</td>
-                  <td>{cat.name_en}</td>
                   <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
                     {cat.slug}
                   </td>
@@ -267,9 +262,9 @@ export default function AdminCategoriesPage() {
             <form onSubmit={handleSubmit}>
               <div className="admin-form-grid">
                 <div className="form-group">
-                  <label htmlFor="cat-name-fr">Name (FR) *</label>
+                  <label htmlFor="cat-name">Name *</label>
                   <input
-                    id="cat-name-fr"
+                    id="cat-name"
                     type="text"
                     value={form.name_fr}
                     onChange={(e) => updateField('name_fr', e.target.value)}
@@ -278,20 +273,9 @@ export default function AdminCategoriesPage() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="cat-name-en">Name (EN) *</label>
+                  <label htmlFor="cat-subtitle">Subtitle</label>
                   <input
-                    id="cat-name-en"
-                    type="text"
-                    value={form.name_en}
-                    onChange={(e) => updateField('name_en', e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="cat-subtitle-fr">Subtitle (FR)</label>
-                  <input
-                    id="cat-subtitle-fr"
+                    id="cat-subtitle"
                     type="text"
                     value={form.subtitle_fr}
                     onChange={(e) => updateField('subtitle_fr', e.target.value)}
@@ -299,52 +283,22 @@ export default function AdminCategoriesPage() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="cat-subtitle-en">Subtitle (EN)</label>
+                  <label htmlFor="card-desc">Card Description</label>
                   <input
-                    id="cat-subtitle-en"
-                    type="text"
-                    value={form.subtitle_en}
-                    onChange={(e) => updateField('subtitle_en', e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="card-desc-fr">Card Description (FR)</label>
-                  <input
-                    id="card-desc-fr"
+                    id="card-desc"
                     type="text"
                     value={form.card_desc_fr}
                     onChange={(e) => updateField('card_desc_fr', e.target.value)}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="card-desc-en">Card Description (EN)</label>
-                  <input
-                    id="card-desc-en"
-                    type="text"
-                    value={form.card_desc_en}
-                    onChange={(e) => updateField('card_desc_en', e.target.value)}
-                  />
-                </div>
-
                 <div className="form-group full-width">
-                  <label htmlFor="cat-desc-fr">Description (FR)</label>
+                  <label htmlFor="cat-desc">Description</label>
                   <textarea
-                    id="cat-desc-fr"
+                    id="cat-desc"
                     rows={3}
                     value={form.desc_fr}
                     onChange={(e) => updateField('desc_fr', e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label htmlFor="cat-desc-en">Description (EN)</label>
-                  <textarea
-                    id="cat-desc-en"
-                    rows={3}
-                    value={form.desc_en}
-                    onChange={(e) => updateField('desc_en', e.target.value)}
                   />
                 </div>
 
@@ -386,7 +340,11 @@ export default function AdminCategoriesPage() {
                   disabled={saving}
                   style={{ flex: 1, justifyContent: 'center' }}
                 >
-                  {saving ? 'Saving...' : editing ? 'Update Category' : 'Create Category'}
+                  {saving
+                    ? 'Translating & Saving...'
+                    : editing
+                    ? 'Update Category'
+                    : 'Create Category'}
                 </button>
                 <button
                   type="button"

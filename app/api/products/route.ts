@@ -53,8 +53,9 @@ export async function POST(request: NextRequest) {
     const sizesRaw = formData.get('sizes') as string | null;
     const sizes = sizesRaw ? JSON.parse(sizesRaw) : null;
     const imageFile = formData.get('image') as File | null;
+    const imageUrlStr = formData.get('image_url') as string | null;
 
-    let image_url: string | null = null;
+    let image_url: string | null = imageUrlStr || null;
 
     if (imageFile) {
       const supabase = createServerClient();

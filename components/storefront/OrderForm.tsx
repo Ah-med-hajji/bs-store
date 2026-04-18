@@ -22,7 +22,7 @@ export default function OrderForm() {
     orderFormOpen,
     setOrderFormOpen,
     sendWhatsAppOrder,
-  } = useCart(lang);
+  } = useCart();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');

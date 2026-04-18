@@ -13,7 +13,7 @@ interface NavbarProps {
 
 export default function Navbar({ categories }: NavbarProps) {
   const { lang, toggleLanguage } = useLanguage();
-  const { itemCount, setSidebarOpen } = useCart(lang);
+  const { itemCount, setSidebarOpen } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 

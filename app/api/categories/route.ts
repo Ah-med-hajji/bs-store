@@ -46,8 +46,9 @@ export async function POST(request: NextRequest) {
     const desc_en = (formData.get('desc_en') as string) || null;
     const sort_order = parseInt(formData.get('sort_order') as string, 10) || 0;
     const imageFile = formData.get('image') as File | null;
+    const imageUrlStr = formData.get('image_url') as string | null;
 
-    let image_url: string | null = null;
+    let image_url: string | null = imageUrlStr || null;
 
     if (imageFile) {
       const supabase = createServerClient();

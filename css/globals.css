@@ -2393,6 +2393,51 @@ a {
   grid-column: 1 / -1;
 }
 
+/* Size checkboxes */
+.admin-size-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.admin-size-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 8px 14px;
+  border: 1px solid var(--cream-dark);
+  border-radius: 6px;
+  background: var(--white);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.admin-size-checkbox:hover {
+  border-color: var(--brown);
+}
+
+.admin-size-checkbox input[type="checkbox"] {
+  display: none;
+}
+
+.admin-size-checkbox-label {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.admin-size-checkbox:has(input:checked) {
+  background: var(--brown);
+  border-color: var(--brown);
+}
+
+.admin-size-checkbox:has(input:checked) .admin-size-checkbox-label {
+  color: var(--cream);
+}
+
 /* Image upload */
 .admin-image-upload {
   border: 2px dashed var(--cream-dark);
